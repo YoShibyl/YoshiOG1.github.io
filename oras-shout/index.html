@@ -1,0 +1,55 @@
+<html>
+    <head>
+        <title>ORAS Shout-Out ARCode generator</title>
+        
+        <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.0/jquery.min.js"></script>
+    </head>
+    <body style="font-size: 14pt; font-family: Arial;">
+    <center>
+        <h1>Pokemon OR/AS Shout-Out Hack</h1><br>
+        <b>Requires Pokemon Omega Ruby / Alpha Sapphire and an exploitable 3DS Browser</b> (9.2.0-20 to 9.5.0-22)<br><br>
+        
+        Text: &nbsp; <input id="theTextInput" type="Text" size="18" maxlength="16" />&nbsp; (no emoji plz)<br>
+        <input type="button" value="Generate Spider ARCode" onclick="generateARCode();" /><br><br>
+        
+        <textarea id="theOutput" rows="17" cols="18"></textarea><br><br>
+        
+        <b>To inject this code into your game, open this link in a new tab and copy/paste the code above there:</b><br>
+        <a href="http://lunarcookies.github.io/cheat.html" target="_blank">http://lunarcookies.github.io/cheat.html</a>
+    </center>
+        
+        <script type="text/javascript">
+            String.prototype.toUnicode = function(){
+                var result = "";
+                var tempString = ""
+                for(var i = 0; i < this.length; i++){
+                    tempString = ("0000" + this[i].charCodeAt(0).toString(16))
+                    result += tempString.substring(tempString.length - 4);
+                }
+                return result;
+            };
+            
+            function switchEndianThing(str) {
+                var newStr = str.substring(str.length - 2) + str.substring(0, 2);
+                return newStr;
+            };
+            
+            function generateARCode() {
+                var inputStr = document.getElementById("theTextInput").value;
+                var inputToHex = (inputStr.toUnicode() + "0000000000000000000000000000000000000000000000000000000000000000").substring(0, 64);
+                var startCode = 0x13981466;
+                var currentLeftSide = ""
+                var currentChar = ""
+                var outputStr = ""
+                
+                for(var i = 0; i < 16; i++){
+                    currentLeftSide = (i * 2 + startCode).toString(16);
+                    currentChar = inputToHex.substring(i * 4, i * 4 + 4);
+                    outputStr += currentLeftSide + " 0000" + currentChar + "\n";
+                }
+                
+                document.getElementById("theOutput").innerText = outputStr;
+            };
+        </script>
+    </body>
+</html>
