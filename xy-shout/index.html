@@ -6,9 +6,9 @@
     </head>
     <body style="font-size: 14pt; font-family: Arial;">
     <center>
-        <h1>Pokemon OR/AS Shout-Out Hack</h1><br>
-        <b>Requires Pokemon Omega Ruby / Alpha Sapphire and an exploitable 3DS Browser</b> (9.2.0-20 to 9.5.0-22)<br>
-        <a href="http://yoshiog1.github.io/xy-shout/"><b><i>Click Here if playing X/Y!!</i></b></a><br><br>
+        <h1>Pokemon X/Y Shout-Out Hack</h1><br>
+        <b>Requires Pokemon X/Y and an exploitable 3DS Browser</b> (9.2.0-20 to 9.5.0-22)<br>
+        <a href="http://yoshiog1.github.io/oras-shout/"><b><i>Click Here if playing Omega Ruby / Alpha Sapphire!!</i></b></a><br><br>
         
         Text: &nbsp; <input id="theTextInput" type="Text" size="18" maxlength="16" />&nbsp; (no emoji plz)<br>
         <input type="button" value="Generate Spider ARCode" onclick="generateARCode();" /><br><br>
@@ -38,7 +38,7 @@
             function generateARCode() {
                 var inputStr = document.getElementById("theTextInput").value;
                 var inputToHex = (inputStr.toUnicode() + "0000000000000000000000000000000000000000000000000000000000000000").substring(0, 64);
-                var startCode = 0x13981466;
+                var startCode = 0x13979D62;
                 var currentLeftSide = ""
                 var currentChar = ""
                 var outputStr = ""
