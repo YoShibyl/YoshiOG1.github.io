@@ -1,0 +1,79 @@
+<html>
+    <head>
+        <title>XY/ORAS NTRclient write() generator</title>
+        
+        <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.0/jquery.min.js"></script>
+    </head>
+    <body style="font-size: 12pt; font-family: Arial;">
+    <center>
+        <h1>Pokemon 
+            <select id="versionSel" style="font-size:24pt;">
+                <option value="xy" selected>X/Y</option>
+                <option value="oras">&#937;R/&#945;S</option>
+            </select>
+            NTR write() Code Generator (Box1Slot1)</h1>
+        <b>Requires Pokemon X/Y or OmegaRuby/AlphaSapphire (select above), NTR CFW, and PKHeX</b><br><br>
+        
+        <h3><b>CAREFUL!</b>  You MUST input an ENCRYPTED Pokemon file (*.ek6 or *.ekx), or else you will get a BAD EGG!</h3><br>
+        To encrypt a Pokemon file, just open it in PKHeX, then go to <b>File =&gt; Save PK6</b>, and from the Save As Type drop-down menu, select <b>EKX File</b>, and save the file.<br><br>
+        
+        Also worth noting is that the Process ID (pid) of the game can vary, so be sure to check which process has "kujira" in its name.<br/>
+        Usually, this is somewhere around 0x29 or 0x2b, but double-check with the on-device menu (X+Y or L+Start) under Process Manager!<br/><br/>
+        
+        <b>Your Encrypted Pokemon file: </b>&nbsp; <input onchange="openFile(event);" type="file" accept=".ek6,.ekx" id="theFile" /><br/>
+        <button type="button" onclick="Convert();">Generate Command</button><br/><br/>
+        
+        <b>DON'T FORGET TO CHANGE "pid=0x##" TO THE PROCESS ID OF THE GAME!!</b><br/><br/>
+        
+        <textarea id="theOutput" rows="21" cols="87" onclick="this.focus();this.select()"></textarea>
+    </center>
+        
+        <script type="text/javascript">
+            var hD='0123456789ABCDEF';
+            function dec2hex(d) {
+                var h = hD.substr(d&15,1);
+                while (d>15) {
+                    d>>=4;
+                    h=hD.substr(d&15,1)+h;
+                }
+                return h;
+            }    
+            
+            var uint8View;
+            
+            function Convert() {	
+                    var hexText = "";
+                    for (i=0; i<0xE8; i++) {
+                      var charVal = uint8View[i];
+                      hexText = hexText + "0x" + (charVal<16?"0":"") + dec2hex(charVal);
+                      if(i < 0xE7) {
+                        hexText += ", ";
+                      }
+                    }
+                    var whichAddr = "";
+                    if(document.getElementById("versionSel").value == "xy") {
+                        whichAddr = "0x08C861C8";
+                    }
+                    if(document.getElementById("versionSel").value == "oras") {
+                        whichAddr = "0x08C9E134";
+                    }
+                    document.getElementById("theOutput").innerHTML = "write(" + whichAddr + ", (" + hexText + "), pid=0x##)";		  	
+            }
+
+
+              var openFile = function(event) {
+                var input = document.getElementById("theFile");
+
+                var reader = new FileReader();
+                reader.onload = function(){
+                  //var text = reader.result;
+                  var arr = reader.result;
+                  uint8View = new Uint8Array(arr);	  
+                };
+                reader.readAsArrayBuffer(input.files[0]);
+              };
+
+          var fin = document.getElementById("theFile");
+        </script>
+    </body>
+</html>
