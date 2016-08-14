@@ -1,29 +1,31 @@
 <html>
     <head>
-        <title>XY/ORAS NTRclient write() generator</title>
+        <title>XY/ORAS NTRclient write() PKX Injector</title>
         
         <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.0/jquery.min.js"></script>
     </head>
     <body style="font-size: 12pt; font-family: Arial;">
+    <style type="text/css">
+        input, button { font-size:12pt; }
+    </style>
     <center>
         <h1>Pokemon 
             <select id="versionSel" style="font-size:24pt;">
-                <option value="xy" selected>X/Y</option>
+                <option value="nothing" selected>[Select Ver.]</option>
+                <option value="xy">X/Y</option>
                 <option value="oras">&#937;R/&#945;S</option>
             </select>
-            NTR write() Code Generator (Box1Slot1)</h1>
+            NTR write() Code Generator (Inject Box1Slot1)</h1>
         <b>Requires Pokemon X/Y or OmegaRuby/AlphaSapphire (select above), NTR CFW, and PKHeX</b><br><br>
         
         <h3><b>CAREFUL!</b>  You MUST input an ENCRYPTED Pokemon file (*.ek6 or *.ekx), or else you will get a BAD EGG!</h3><br>
         To encrypt a Pokemon file, just open it in PKHeX, then go to <b>File =&gt; Save PK6</b>, and from the Save As Type drop-down menu, select <b>EKX File</b>, and save the file.<br><br>
         
-        Also worth noting is that the Process ID (pid) of the game can vary, so be sure to check which process has "kujira" in its name.<br/>
-        Usually, this is somewhere around 0x29 or 0x2b, but double-check with the on-device menu (X+Y or L+Start) under Process Manager!<br/><br/>
-        
         <b>Your Encrypted Pokemon file: </b>&nbsp; <input onchange="openFile(event);" type="file" accept=".ek6,.ekx" id="theFile" /><br/>
+        <b>Process ID of the game:</b> &nbsp; 0x<input type="text" id="processId" size="2" maxlength="2" /><br/>
         <button type="button" onclick="Convert();">Generate Command</button><br/><br/>
         
-        <b>DON'T FORGET TO CHANGE "pid=0x##" TO THE PROCESS ID OF THE GAME!!</b><br/><br/>
+        <b>TO FIND THE PROCESS ID, just type "listprocess()" in NTR Debugger (no quotes), and look for the one that says "sango" (ORAS) or "kujira" (XY).</b><br/><br/>
         
         <textarea id="theOutput" rows="21" cols="87" onclick="this.focus();this.select()"></textarea>
     </center>
@@ -42,6 +44,7 @@
             var uint8View;
             
             function Convert() {	
+                if(document.getElementById("versionSel").value != "nothing") {
                     var hexText = "";
                     for (i=0; i<0xE8; i++) {
                       var charVal = uint8View[i];
@@ -57,7 +60,9 @@
                     if(document.getElementById("versionSel").value == "oras") {
                         whichAddr = "0x08C9E134";
                     }
-                    document.getElementById("theOutput").innerHTML = "write(" + whichAddr + ", (" + hexText + "), pid=0x##)";		  	
+                    var thePid = document.getElementById("processId").value;
+                    document.getElementById("theOutput").innerHTML = "write(" + whichAddr + ", (" + hexText + "), pid=0x" + thePid + ")";	
+                }
             }
 
 
