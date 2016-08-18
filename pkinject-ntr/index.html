@@ -3,6 +3,7 @@
         <title>XY/ORAS NTRclient write() PKX Injector</title>
         
         <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.0/jquery.min.js"></script>
+        <script src="http://peterolson.github.com/BigInteger.js/BigInteger.min.js"></script>
     </head>
     <body style="font-size: 12pt; font-family: Arial;">
     <style type="text/css">
@@ -18,10 +19,9 @@
             NTR write() Code Generator (Inject Box1Slot1)</h1>
         <b>Requires Pokemon X/Y or OmegaRuby/AlphaSapphire (select above), NTR CFW, and PKHeX</b><br><br>
         
-        <h3><b>CAREFUL!</b>  You MUST input an ENCRYPTED Pokemon file (*.ek6 or *.ekx), or else you will get a BAD EGG!</h3><br>
-        To encrypt a Pokemon file, just open it in PKHeX, then go to <b>File =&gt; Save PK6</b>, and from the Save As Type drop-down menu, select <b>EKX File</b>, and save the file.<br><br>
+        <h3><b style="color:#009900;">*NEW*</b> &nbsp; You can now upload decrypted Pokemon files (*.pk6) instead of encrypted ones!<br><br>
         
-        <b>Your Encrypted Pokemon file: </b>&nbsp; <input onchange="openFile(event);" type="file" accept=".ek6,.ekx" id="theFile" /><br/>
+        <b>Your Pokemon file: </b> &nbsp; <input onchange="openFile(event);" type="file" accept=".ek6,.ekx,.pk6,.pkx" id="theFile" /><br/>
         <b>Process ID of the game:</b> &nbsp; 0x<input type="text" id="processId" size="2" maxlength="2" /><br/>
         <button type="button" onclick="Convert();">Generate Command</button><br/><br/>
         
@@ -29,56 +29,149 @@
         
         <textarea id="theOutput" rows="21" cols="87" onclick="this.focus();this.select()"></textarea>
     </center>
-        
-        <script type="text/javascript">
-            var hD='0123456789ABCDEF';
-            function dec2hex(d) {
-                var h = hD.substr(d&15,1);
-                while (d>15) {
-                    d>>=4;
-                    h=hD.substr(d&15,1)+h;
-                }
-                return h;
-            }    
-            
-            var uint8View;
-            
-            function Convert() {	
-                if(document.getElementById("versionSel").value != "nothing") {
-                    var hexText = "";
-                    for (i=0; i<0xE8; i++) {
-                      var charVal = uint8View[i];
-                      hexText = hexText + "0x" + (charVal<16?"0":"") + dec2hex(charVal);
-                      if(i < 0xE7) {
-                        hexText += ", ";
-                      }
-                    }
-                    var whichAddr = "";
-                    if(document.getElementById("versionSel").value == "xy") {
-                        whichAddr = "0x08C861C8";
-                    }
-                    if(document.getElementById("versionSel").value == "oras") {
-                        whichAddr = "0x08C9E134";
-                    }
-                    var thePid = document.getElementById("processId").value;
-                    document.getElementById("theOutput").innerHTML = "write(" + whichAddr + ", (" + hexText + "), pid=0x" + thePid + ")";	
-                }
+    
+    <script type="text/javascript">
+        // This encryption stuff was basically stolen from PokEdit.com (sorry)
+        var A = 0, B = 1, C = 2, D = 3;
+
+        var blocks = [
+                    /*   enc   */  /*   dec   */
+        /* 00 */    [[A, B, C, D], [A, B, C, D]],
+        /* 01 */    [[A, B, D, C], [A, B, D, C]],
+        /* 02 */    [[A, C, B, D], [A, C, B, D]],
+        /* 03 */    [[A, C, D, B], [A, D, B, C]],
+        /* 04 */    [[A, D, B, C], [A, C, D, B]],
+        /* 05 */    [[A, D, C, B], [A, D, C, B]],
+        /* 06 */    [[B, A, C, D], [B, A, C, D]],
+        /* 07 */    [[B, A, D, C], [B, A, D, C]],
+        /* 08 */    [[B, C, A, D], [C, A, B, D]],
+        /* 09 */    [[B, C, D, A], [D, A, B, C]],
+        /* 10 */    [[B, D, A, C], [C, A, D, B]],
+        /* 11 */    [[B, D, C, A], [D, A, C, B]],
+        /* 12 */    [[C, A, B, D], [B, C, A, D]],
+        /* 13 */    [[C, A, D, B], [B, D, A, C]],
+        /* 14 */    [[C, B, A, D], [C, B, A, D]],
+        /* 15 */    [[C, B, D, A], [D, B, A, C]],
+        /* 16 */    [[C, D, A, B], [C, D, A, B]],
+        /* 17 */    [[C, D, B, A], [D, C, A, B]],
+        /* 18 */    [[D, A, B, C], [B, C, D, A]],
+        /* 19 */    [[D, A, C, B], [B, D, C, A]],
+        /* 20 */    [[D, B, A, C], [C, B, D, A]],
+        /* 21 */    [[D, B, C, A], [D, B, C, A]],
+        /* 22 */    [[D, C, A, B], [C, D, B, A]],
+        /* 23 */    [[D, C, B, A], [D, C, B, A]]
+        ];
+
+        function nextRandom(obj) {
+            obj.seed = obj.seed.multiply(0x41C64E6D).add(0x00006073).and(0xFFFFFFFF);
+            return obj.seed >>> 16;
+        }
+
+        function valChk(pk) {
+            var sum = 0;
+
+            var chk = pk[6] + ( pk[7] << 8 );
+
+            for(var i = 8; i < 232; i+=2) {
+                sum = ( sum + ( pk[i] + ( pk[i+1] << 8 ) ) ) & 0xFFFFFFFF;
             }
+            sum &= 0xFFFF;
+
+            return sum === chk;
+        }
+
+        function cipherPkx(pk) {
+            var aux = 0;
+            var seed = {};
+
+            seed.seed = bigInt(pk[0] + (pk[1] << 8) + (pk[2] << 16) + (pk[3] * 0x1000000));
+
+            for(var i = 8; i < 232; i+=2) {
+                aux = (pk[i] + ( pk[i+1] << 8 )) ^ nextRandom(seed);
+                pk[i] = aux & 0xFF;
+                pk[i+1] = aux >>> 8;
+            }
+        }
+
+        function shuffleBlocks(pk, mode) {
+            var aux = [];
+            var order;
+
+            for(var i = 0; i < 232; ++i)
+                aux[i] = pk[i];
+
+            order = (((pk[0] + (pk[1] << 8) + (pk[2] << 16) ) & 0x3E000) >>> 0xD) % 24;
+
+            for(var i = 0; i < 4; ++i)
+                for(var j = 0; j < 56; ++j)
+                    pk[j + 56 * i + 8] = aux[j + 56 * blocks[order][mode][i] + 8];
+        }
+
+        function encryptPkx(pkx) {
+            shuffleBlocks(pkx, 0);
+            cipherPkx(pkx);
+        }
+        
+        // =------------------------
+        //  End of encryption stuff
+        // =========================
+        
+        function checkExtension() {
+            var theFilename = document.getElementById("theFile").value;
+            return theFilename.substr(theFilename.length - 3, 2);
+        }
+        
+        var hD='0123456789ABCDEF';
+        function dec2hex(d) {
+            var h = hD.substr(d&15,1);
+            while (d>15) {
+                d>>=4;
+                h=hD.substr(d&15,1)+h;
+            }
+            return h;
+        }    
+        
+        var uint8View;
+        
+        function Convert() {	
+            if(document.getElementById("versionSel").value != "nothing") {
+                var hexText = "";
+                if(checkExtension() != "ek") {
+                    encryptPkx(uint8View);
+                }
+                for (i=0; i<0xE8; i++) {
+                  var charVal = uint8View[i];
+                  hexText = hexText + "0x" + (charVal<16?"0":"") + dec2hex(charVal);
+                  if(i < 0xE7) {
+                    hexText += ", ";
+                  }
+                }
+                var whichAddr = "";
+                if(document.getElementById("versionSel").value == "xy") {
+                    whichAddr = "0x08C861C8";
+                }
+                if(document.getElementById("versionSel").value == "oras") {
+                    whichAddr = "0x08C9E134";
+                }
+                var thePid = document.getElementById("processId").value;
+                document.getElementById("theOutput").innerHTML = "write(" + whichAddr + ", (" + hexText + "), pid=0x" + thePid + ")";	
+            }
+        }
 
 
-              var openFile = function(event) {
-                var input = document.getElementById("theFile");
+          var openFile = function(event) {
+            var input = document.getElementById("theFile");
 
-                var reader = new FileReader();
-                reader.onload = function(){
-                  //var text = reader.result;
-                  var arr = reader.result;
-                  uint8View = new Uint8Array(arr);	  
-                };
-                reader.readAsArrayBuffer(input.files[0]);
-              };
+            var reader = new FileReader();
+            reader.onload = function(){
+              //var text = reader.result;
+              var arr = reader.result;
+              uint8View = new Uint8Array(arr);	  
+            };
+            reader.readAsArrayBuffer(input.files[0]);
+          };
 
-          var fin = document.getElementById("theFile");
-        </script>
+      var fin = document.getElementById("theFile");
+    </script>
     </body>
 </html>
