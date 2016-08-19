@@ -136,7 +136,8 @@
         function Convert() {	
             if(document.getElementById("versionSel").value != "nothing") {
                 var hexText = "";
-                if(checkExtension() != "ek") {
+                if(checkExtension() != "ek" && uint8View[0xE5] == 0x00 && uint8View[0xE6] == 0x00 && uint8View[0xE7] == 0x00) {
+                    // Double-checks if the unused bytes in the file are unencrypted (0x00) and encrypts the PK6 if necessary.
                     encryptPkx(uint8View);
                 }
                 for (i=0; i<0xE8; i++) {
