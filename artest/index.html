@@ -8,8 +8,12 @@
 <script nomodule src="https://unpkg.com/@google/model-viewer/dist/model-viewer-legacy.js"></script>
 
 <!-- Use it like any other HTML element -->
-<model-viewer src="../PokeStop_thing.glb" alt="A 3D model of a PokeStop" auto-rotate camera-controls background-color="#455A64" ar ar-scale="fixed">
-  <button slot="ar-button">View in AR</button>
+<model-viewer src="https://yoshiog1.github.io/PokeStop_thing.glb" alt="A 3D model of a PokeStop" auto-rotate camera-controls background-color="#455A64" ar ar-scale="fixed">
+  <button slot="ar-button" id="ar-button">View in AR</button>
+  <div id="ar-prompt">
+    <img src="../assets/hand.png">
+  </div>
+  
 </model-viewer>
 </body>
 </html>
